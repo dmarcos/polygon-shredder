@@ -203,42 +203,9 @@ function init() {
 	encasing.lookAt( scene.position );
 	encasing.rotation.y += Math.PI / 2;
 	encasing.rotation.z += Math.PI / 2;
-
+	
 	var b = new THREE.CameraHelper( shadowCamera );
 	//scene.add( b );
-
-	if( 'getVRDisplays' in navigator ) {
-
-		navigator.getVRDisplays().then(function(displays) {
-			if (displays.length > 0) {
-				vrDisplay = displays[0];
-				effect = new THREE.VREffect( renderer );
-				effect.setVRDisplay( vrDisplay );
-				controls = new THREE.VRControls( camera );
-				controls.standing = true;
-				controls.setVRDisplay( vrDisplay );
-				if (vrDisplay.stageParameters) {
-					//setStageDimensions(vrDisplay.stageParameters);
-				}
-				document.body.appendChild( WEBVR.getButton( effect ) );
-				animate();
-			}
-		});
-
-	} else {
-
-		user.position.y = 1.6;
-		camera.position.set( -.1, 0, 0 );
-		camera.lookAt( new THREE.Vector3( 0, 0, -2 ) );
-		controls = new THREE.OrbitControls( camera, renderer.domElement );
-		effect = {
-			setSize: function( w, h ) { renderer.setSize( w, h ) },
-			requestAnimationFrame: function( c ) { requestAnimationFrame( c ) },
-			render: function( s, c ) { renderer.render( s, c ); }
-		}
-		animate();
-
-	}
 
 	sim = new Simulation( renderer, size, size );
 
@@ -536,6 +503,38 @@ function init() {
 
 	document.getElementById( 'loading' ).style.display = 'none';
 	document.getElementById( 'loaded' ).style.display = 'block';
+
+	if( 'getVRDisplays' in navigator ) {
+
+		navigator.getVRDisplays().then(function(displays) {
+			if (displays.length > 0) {
+				vrDisplay = displays[0];
+				effect = new THREE.VREffect( renderer );
+				effect.setVRDisplay( vrDisplay );
+				controls = new THREE.VRControls( camera );
+				controls.standing = true;
+				controls.setVRDisplay( vrDisplay );
+				if (vrDisplay.stageParameters) {
+					//setStageDimensions(vrDisplay.stageParameters);
+				}
+				document.body.appendChild( WEBVR.getButton( effect ) );
+				animate();
+			}
+		});
+
+	} else {
+
+		camera.position.set( -.1, 0, 0 );
+		camera.lookAt( new THREE.Vector3( 0, 0, -2 ) );
+		controls = new THREE.OrbitControls( camera, renderer.domElement );
+		effect = {
+			setSize: function( w, h ) { renderer.setSize( w, h ) },
+			requestAnimationFrame: function( c ) { requestAnimationFrame( c ) },
+			render: function( s, c ) { renderer.render( s, c ); }
+		}
+		animate();
+
+	}
 
 }
 
