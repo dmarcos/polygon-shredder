@@ -446,6 +446,10 @@ function init() {
 		document.querySelector( '.dg' ).style.display = 'none';
 		onWindowResize()
 	}, true );
+	
+	window.addEventListener( 'vrdisplayactivate', function() {
+		effect.requestPresent();
+	});
 
 	function onWindowResize() {
 
