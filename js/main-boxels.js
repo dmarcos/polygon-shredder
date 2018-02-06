@@ -21,6 +21,11 @@ function check() {
 }
 
 var vrDisplay;
+var controllerLeft;
+var controllerMeshLeft;
+
+var controllerRight;
+var controllerMeshRight;
 
 var size
 var inFrame = false;
@@ -203,7 +208,17 @@ function init() {
 	encasing.lookAt( scene.position );
 	encasing.rotation.y += Math.PI / 2;
 	encasing.rotation.z += Math.PI / 2;
-	
+
+	controllerLeft = new THREE.TrackedController(0);
+	controllerMeshLeft = new THREE.Mesh( new THREE.CylinderGeometry( 0.025, 0.025, .025, 36 ), new THREE.MeshBasicMaterial( { color: 0xe6ebe0 }) );
+	controllerLeft.add(controllerMeshLeft);
+	scene.add(controllerLeft);
+
+	controllerRight = new THREE.TrackedController(1);
+	controllerMeshRight = new THREE.Mesh( new THREE.CylinderGeometry( 0.025, 0.025, .025, 36 ), new THREE.MeshBasicMaterial( { color: 0xe6ebe0 }) );
+	controllerRight.add(controllerMeshRight);
+	scene.add(controllerRight);
+
 	var b = new THREE.CameraHelper( shadowCamera );
 	//scene.add( b );
 
@@ -487,6 +502,33 @@ function init() {
 
 	});
 
+	var buttonsDown = 0;
+
+	function onButtonDown( ) {
+
+		buttonsDown += 1;
+		controllerMeshLeft.material.color.set(0xe67373);
+		controllerMeshRight.material.color.set(0xe67373);
+		sim.simulationShader.uniforms.active.value = 0;
+
+	}
+
+	function onButtonUp(  ) {
+		
+		buttonsDown -= 1;
+		if (buttonsDown !== 0) { return; }
+		controllerMeshLeft.material.color.set(0xe6ebe0);
+		controllerMeshRight.material.color.set(0xe6ebe0);
+		sim.simulationShader.uniforms.active.value = 1;
+
+	}
+
+	controllerRight.addEventListener( 'buttondown', onButtonDown );
+	controllerLeft.addEventListener( 'buttondown', onButtonDown );
+
+	controllerRight.addEventListener( 'buttonup', onButtonUp );
+	controllerLeft.addEventListener( 'buttonup', onButtonUp );
+
 	window.addEventListener( 'keydown', function( e ) {
 
 		if( e.keyCode === 32 ) {
@@ -542,15 +584,6 @@ function animate() {
 		}
 	}
 
-	pads.forEach( function( h, id ) {
-		if( h.buttons[ 1 ].pressed ) {
-			sim.simulationShader.uniforms.active.value = 0;
-		} else {
-			sim.simulationShader.uniforms.active.value = 1;
-		}
-		sim.simulationShader.uniforms.timeScale.value = 1 - h.buttons[ 1 ].value;
-	} );
-
 	render();
 
 	effect.requestAnimationFrame( animate );
@@ -567,19 +600,18 @@ var time = 0;
 function render( timestamp ) {
 
 	controls.update();
+		if (controls.standing) {
+		controllerLeft.standingMatrix.copy(controls.getStandingMatrix());
+		controllerRight.standingMatrix.copy(controls.getStandingMatrix());
+	}
+
+	controllerLeft.update();
+	controllerRight.update();
 
 	scale += ( nScale - scale ) * .01;
 
-	plane.lookAt( camera.position );
-
-	raycaster.setFromCamera( mouse, camera );
-
-	var intersects = raycaster.intersectObject( plane );
-
-	if( intersects.length ) {
-		nOffset.copy( intersects[ 0 ].point );
-		proxy.position.copy( nOffset );
-	}
+	nOffset.copy( controllerRight.position );
+	proxy.position.copy( nOffset );
 
 	var delta = t.getDelta() * .75;
 	if( sim.simulationShader.uniforms.active.value === 1 ) {
